@@ -1,6 +1,7 @@
 package com.insurance.auto.domain.model;
 
 import java.time.LocalDate;
+import java.time.Period;
 
 public record Driver(
         Long id,
@@ -8,4 +9,7 @@ public record Driver(
         LocalDate birthDate,
         int accidentHistoryCount
 ) {
+    public int getAge() {
+        return Period.between(birthDate, LocalDate.now()).getYears();
+    }
 }

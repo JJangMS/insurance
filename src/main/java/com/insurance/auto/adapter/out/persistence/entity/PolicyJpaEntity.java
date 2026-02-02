@@ -8,6 +8,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -25,14 +27,18 @@ public class PolicyJpaEntity {
     private Long carId;
     private Long premium;
     private String status;
+    private LocalDate startDate;
+    private LocalDate endDate;
     private LocalDateTime createdAt;
 
-    public PolicyJpaEntity(String policyNumber, Long driverId, Long carId, Long premium, String status) {
+    public PolicyJpaEntity(String policyNumber, Long driverId, Long carId, Long premium, String status, LocalDate startDate, LocalDate endDate) {
         this.policyNumber = policyNumber;
         this.driverId = driverId;
         this.carId = carId;
         this.premium = premium;
         this.status = status;
+        this.startDate = startDate;
+        this.endDate = endDate;
         this.createdAt = LocalDateTime.now();
     }
 }

@@ -54,8 +54,10 @@ public class DataInitializer implements CommandLineRunner {
                 UUID.randomUUID().toString(),
                 savedDriver.getId(),
                 savedCar.getId(),
-                802_360L, // 계산된 보험료 예시
-                PolicyStatus.APPROVED.name()
+                802_360L,
+                PolicyStatus.APPROVED.name(),
+                LocalDate.of(2025, 10, 21),
+                LocalDate.of(2026, 10, 20)
         );
         policyRepository.save(policy);
 

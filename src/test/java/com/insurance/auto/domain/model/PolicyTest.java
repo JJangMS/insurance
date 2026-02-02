@@ -1,9 +1,11 @@
 package com.insurance.auto.domain.model;
 
+import com.insurance.auto.domain.exception.RejectException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import java.time.LocalDate;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 class PolicyTest {
 
@@ -25,11 +27,11 @@ class PolicyTest {
         Policy policy = new Policy(1L, 1L);
         Driver youngDriver = new Driver(1L, "어린이", LocalDate.now().minusYears(20), 0, "010-1234-5678");
 
-        // When
-        policy.review(youngDriver, BASE_PREMIUM, AGE_SURCHARGE, ACCIDENT_SURCHARGE);
-
-        // Then
-        assertThat(policy.getStatus()).isEqualTo(PolicyStatus.REJECTED);
+        // When, Then
+        assertThatThrownBy(() ->
+                policy.review(youngDriver, BASE_PREMIUM, AGE_SURCHARGE, ACCIDENT_SURCHARGE)
+        ).isInstanceOf(RejectException.class)
+                .hasMessageContaining("죄송합니다. 만 21세 미만은 가입이 불가능합니다.");
     }
 
     @Test
@@ -39,11 +41,11 @@ class PolicyTest {
         Policy policy = new Policy(1L, 1L);
         Driver accidentDriver = new Driver(1L, "사고뭉치", LocalDate.now().minusYears(30), 3, "010-1234-5678");
 
-        // When
-        policy.review(accidentDriver, BASE_PREMIUM, AGE_SURCHARGE, ACCIDENT_SURCHARGE);
-
-        // Then
-        assertThat(policy.getStatus()).isEqualTo(PolicyStatus.REJECTED);
+        // When, Then
+        assertThatThrownBy(() ->
+                policy.review(accidentDriver, BASE_PREMIUM, AGE_SURCHARGE, ACCIDENT_SURCHARGE)
+        ).isInstanceOf(RejectException.class)
+                .hasMessageContaining("최근 사고 이력이 많아(3회 이상) 인수가 거절되었습니다.");
     }
 
     @Test

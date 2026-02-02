@@ -4,6 +4,7 @@ import com.insurance.auto.application.port.in.RegisterDriverCarCommand;
 import com.insurance.auto.application.port.in.RegisterPolicyCommand;
 import com.insurance.auto.application.port.in.dto.CustomerInquiryInfo;
 import com.insurance.auto.application.port.out.*;
+import com.insurance.auto.domain.exception.RejectException;
 import com.insurance.auto.domain.model.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
@@ -134,14 +136,11 @@ class AutoPolicyServiceTest {
 
         given(loadDriverPort.loadDriver(1L)).willReturn(Optional.of(babyDriver));
         given(loadCarPort.loadCar(1L)).willReturn(Optional.of(car));
-        given(savePolicyPort.save(any(Policy.class))).willAnswer(invocation -> invocation.getArgument(0));
 
-        // When
-        Policy result = autoPolicyService.create(new RegisterPolicyCommand(1L, 1L));
-
-        // Then
-        assertThat(result.getStatus()).isEqualTo(PolicyStatus.REJECTED);
-        assertThat(result.getPremium()).isEqualTo(0L);
+        // When, Then
+        assertThatThrownBy(() -> autoPolicyService.create(new RegisterPolicyCommand(1L, 1L)))
+                .isInstanceOf(RejectException.class)
+                .hasMessageContaining("죄송합니다. 만 21세 미만은 가입이 불가능합니다.");
     }
 
     @Test
@@ -153,7 +152,6 @@ class AutoPolicyServiceTest {
                 "123가4567", "모델y", "듀얼모터", 2026
         );
 
-        // Mocking: 저장 후 ID가 부여된 객체를 반환한다고 가정
         Driver savedDriver = new Driver(10L, command.name(), command.birthDate(), 0, command.phone());
         Car savedCar = new Car(20L, command.carNumber(), command.carModel(), command.carModelName(), command.carModelYear(), 20_000_000L, true);
 
@@ -167,7 +165,6 @@ class AutoPolicyServiceTest {
         assertThat(result.driver()).isEqualTo(savedDriver);
         assertThat(result.car()).isEqualTo(savedCar);
 
-        // 실제로 저장이 호출되었는지 검증
         verify(saveDriverPort).save(any(Driver.class));
         verify(saveCarPort).save(any(Car.class));
     }

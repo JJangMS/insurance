@@ -1,5 +1,6 @@
 package com.insurance.auto.domain.model;
 
+import com.insurance.auto.domain.exception.RejectException;
 import lombok.Getter;
 
 import java.time.LocalDate;
@@ -38,11 +39,15 @@ public class Policy {
 
     public void review(Driver driver, long basePremium, long ageSurcharge, long accidentSurcharge) {
         // 만 21세 미만 or 사고 3회 이상 REJECTED
-        if (driver.getAge() < 21 || driver.accidentHistoryCount() >= 3) {
+        if (driver.getAge() < 21) {
             this.status = PolicyStatus.REJECTED;
-            this.premium = 0L;
-            return;
+            throw new RejectException("죄송합니다. 만 21세 미만은 가입이 불가능합니다.");
         }
+        if (driver.accidentHistoryCount() >= 3) {
+            this.status = PolicyStatus.REJECTED;
+            throw new RejectException("최근 사고 이력이 많아(3회 이상) 인수가 거절되었습니다.");
+        }
+
         long calculatePremium = basePremium;
         if (driver.getAge() < 25) {
             calculatePremium += ageSurcharge;

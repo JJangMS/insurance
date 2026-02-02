@@ -9,6 +9,7 @@ public class Policy {
     private final String policyNumber;
     private final Long driverId;
     private final Long carId;
+    private Long premium;
 
     private PolicyStatus status;
 
@@ -26,5 +27,9 @@ public class Policy {
         } else {
             this.status = PolicyStatus.APPROVED;
         }
+    }
+
+    public void updatePremium(Long calculatedPremium) {
+        this.premium = calculatedPremium;
     }
 }

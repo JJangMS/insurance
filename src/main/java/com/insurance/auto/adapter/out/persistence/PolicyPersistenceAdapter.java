@@ -41,6 +41,7 @@ public class PolicyPersistenceAdapter implements LoadInsuredPort, SavePolicyPort
                 policy.getPolicyNumber(),
                 policy.getDriverId(),
                 policy.getCarId(),
+                policy.getPremium(),
                 policy.getStatus().name()
         );
         policyRepository.save(entity);

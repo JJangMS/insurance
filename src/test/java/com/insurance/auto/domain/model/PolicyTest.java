@@ -7,6 +7,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class PolicyTest {
 
+    private static final long BASE_PREMIUM = 600_000L;
+    private static final long AGE_SURCHARGE = 200_000L;
+    private static final long ACCIDENT_SURCHARGE = 100_000L;
+
     @Test
     @DisplayName("정책 생성 시 초기 상태는 REVIEWING이어야 한다")
     void create_policy_initial_status() {
@@ -22,7 +26,7 @@ class PolicyTest {
         Driver youngDriver = new Driver(1L, "어린이", LocalDate.now().minusYears(20), 0, "010-1234-5678");
 
         // When
-        policy.approve(youngDriver, LocalDate.now(), 500000L);
+        policy.review(youngDriver, BASE_PREMIUM, AGE_SURCHARGE, ACCIDENT_SURCHARGE);
 
         // Then
         assertThat(policy.getStatus()).isEqualTo(PolicyStatus.REJECTED);
@@ -36,28 +40,45 @@ class PolicyTest {
         Driver accidentDriver = new Driver(1L, "사고뭉치", LocalDate.now().minusYears(30), 3, "010-1234-5678");
 
         // When
-        policy.approve(accidentDriver, LocalDate.now(), 500000L);
+        policy.review(accidentDriver, BASE_PREMIUM, AGE_SURCHARGE, ACCIDENT_SURCHARGE);
 
         // Then
         assertThat(policy.getStatus()).isEqualTo(PolicyStatus.REJECTED);
     }
 
     @Test
-    @DisplayName("정상 운전자는 승인되며 기간과 보험료가 확정된다")
+    @DisplayName("25세 미만 운전자는 연령 할증이 포함된 보험료가 책정되고 REVIEWING 상태가 된다")
+    void review_success_with_age_surcharge() {
+        // Given
+        Policy policy = new Policy(1L, 1L);
+        Driver youngDriver = new Driver(1L, "젊은이", LocalDate.now().minusYears(24), 0, "010-1234-5678");
+
+        // When
+        policy.review(youngDriver, BASE_PREMIUM, AGE_SURCHARGE, ACCIDENT_SURCHARGE);
+
+        // Then
+        assertThat(policy.getStatus()).isEqualTo(PolicyStatus.REVIEWING);
+        assertThat(policy.getPremium()).isEqualTo(BASE_PREMIUM + AGE_SURCHARGE);
+    }
+
+    @Test
+    @DisplayName("심사가 완료된 정책은 승인 가능하며, 기간과 증권번호가 확정된다")
     void approve_success() {
         // Given
         Policy policy = new Policy(1L, 1L);
-        Driver goodDriver = new Driver(1L, "베스트드라이버", LocalDate.now().minusYears(30), 0, "010-1234-5678");
+        Driver driver = new Driver(1L, "베스트드라이버", LocalDate.now().minusYears(30), 0, "010-1234-5678");
+
+        policy.review(driver, BASE_PREMIUM, AGE_SURCHARGE, ACCIDENT_SURCHARGE);
+
         LocalDate startDate = LocalDate.of(2026, 2, 2);
-        Long premium = 800_000L;
 
         // When
-        policy.approve(goodDriver, startDate, premium);
+        policy.approve(startDate);
 
         // Then
         assertThat(policy.getStatus()).isEqualTo(PolicyStatus.APPROVED);
         assertThat(policy.getStartDate()).isEqualTo(startDate);
         assertThat(policy.getEndDate()).isEqualTo(startDate.plusYears(1).minusDays(1));
-        assertThat(policy.getPremium()).isEqualTo(premium);
+        assertThat(policy.getPolicyNumber()).isNotNull();
     }
 }

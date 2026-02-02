@@ -20,6 +20,7 @@ public class Policy {
         this.policyNumber = UUID.randomUUID().toString();
         this.driverId = driverId;
         this.carId = carId;
+        this.premium = 0L;
         this.status = PolicyStatus.REVIEWING;
     }
 
@@ -35,22 +36,30 @@ public class Policy {
         this.endDate = endDate;
     }
 
-    // 만 21세 미만 or 사고 3회 이상 REJECTED
-    public void underwrite(Driver driver) {
+    public void review(Driver driver, long basePremium, long ageSurcharge, long accidentSurcharge) {
+        // 만 21세 미만 or 사고 3회 이상 REJECTED
         if (driver.getAge() < 21 || driver.accidentHistoryCount() >= 3) {
             this.status = PolicyStatus.REJECTED;
-        } else {
-            this.status = PolicyStatus.APPROVED;
+            this.premium = 0L;
+            return;
         }
+        long calculatePremium = basePremium;
+        if (driver.getAge() < 25) {
+            calculatePremium += ageSurcharge;
+        }
+
+        this.premium = calculatePremium + (driver.accidentHistoryCount() * accidentSurcharge);
+        this.status = PolicyStatus.REVIEWING;
     }
 
-    public void approve(Driver driver, LocalDate requestedStartDate, Long calculatedPremium) {
-        underwrite(driver);
-
-        if (this.status == PolicyStatus.APPROVED) {
-            this.startDate = requestedStartDate;
-            this.endDate = requestedStartDate.plusYears(1).minusDays(1);
-            this.premium = calculatedPremium;
+    public void approve(LocalDate requestedStartDate) {
+        if (this.status != PolicyStatus.REVIEWING) {
+            throw new IllegalStateException("REVIEWING 건만 승인이 가능합니다. 현재 상태: " + this.status);
         }
+
+        this.status = PolicyStatus.APPROVED;
+
+        this.startDate = requestedStartDate;
+        this.endDate = requestedStartDate.plusYears(1).minusDays(1);
     }
 }

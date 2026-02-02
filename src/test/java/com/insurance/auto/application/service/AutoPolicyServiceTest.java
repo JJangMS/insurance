@@ -32,14 +32,16 @@ class AutoPolicyServiceTest {
     @DisplayName("운전자와 차량 정보가 있으면 임시 정책을 생성하고 저장한다")
     void register_success() {
         // Given
-        given(loadDriverPort.loadDriver(1L)).willReturn(Optional.of(new Driver(1L, "장민수", LocalDate.now(), 0, "010-1234-5678")));
+        given(loadDriverPort.loadDriver(1L)).willReturn(Optional.of(new Driver(1L, "장민수", LocalDate.of(1993, 2, 12), 0, "010-1234-5678")));
         given(loadCarPort.loadCar(1L)).willReturn(Optional.of(new Car(1L, "234오6789", "그랜저", "더 뉴 그랜저IG 2.5 가솔린", 2021, 19_390_000L, true)));
+        given(savePolicyPort.save(any(Policy.class))).willAnswer(invocation -> invocation.getArgument(0));
 
         // When
         Policy result = autoPolicyService.create(new RegisterPolicyCommand(1L, 1L));
 
         // Then
         assertThat(result.getStatus()).isEqualTo(PolicyStatus.REVIEWING);
+        assertThat(result.getPremium()).isEqualTo(600_000L);
         verify(savePolicyPort).save(any(Policy.class));
     }
 
@@ -71,8 +73,10 @@ class AutoPolicyServiceTest {
         Policy policy = new Policy(1L, 1L);
         Driver driver = new Driver(1L, "장민수", LocalDate.of(1993, 2, 12), 0, "010-1234-5678");
 
+        policy.review(driver, 600_000L, 200_000L, 100_000L);
+
         given(loadPolicyPort.loadPolicy(1L)).willReturn(Optional.of(policy));
-        given(loadDriverPort.loadDriver(1L)).willReturn(Optional.of(driver));
+        given(savePolicyPort.save(any(Policy.class))).willAnswer(invocation -> invocation.getArgument(0));
 
         // When
         autoPolicyService.approve(1L, LocalDate.now());
@@ -80,5 +84,60 @@ class AutoPolicyServiceTest {
         // Then
         assertThat(policy.getStatus()).isEqualTo(PolicyStatus.APPROVED);
         verify(savePolicyPort).save(policy);
+    }
+
+    @Test
+    @DisplayName("만 25세 미만 운전자는 연령 할증(20만원)이 추가된다")
+    void register_with_age_surcharge() {
+        // Given
+        Driver youngDriver = new Driver(1L, "젊은이", LocalDate.now().minusYears(24), 0, "010-1234-5678");
+        Car car = new Car(1L, "234오6789", "그랜저", "더 뉴 그랜저IG", 2021, 19_390_000L, true);
+
+        given(loadDriverPort.loadDriver(1L)).willReturn(Optional.of(youngDriver));
+        given(loadCarPort.loadCar(1L)).willReturn(Optional.of(car));
+        given(savePolicyPort.save(any(Policy.class))).willAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        Policy result = autoPolicyService.create(new RegisterPolicyCommand(1L, 1L));
+
+        // Then
+        assertThat(result.getPremium()).isEqualTo(800_000L);
+    }
+
+    @Test
+    @DisplayName("사고 이력이 2회 있으면 사고 할증(20만원)이 추가된다")
+    void register_with_accident_surcharge() {
+        // Given
+        Driver accidentDriver = new Driver(1L, "덜사고뭉치", LocalDate.now().minusYears(30), 2, "010-1234-5678");
+        Car car = new Car(1L, "234오6789", "그랜저", "더 뉴 그랜저IG", 2021, 19_390_000L, true);
+
+        given(loadDriverPort.loadDriver(1L)).willReturn(Optional.of(accidentDriver));
+        given(loadCarPort.loadCar(1L)).willReturn(Optional.of(car));
+        given(savePolicyPort.save(any(Policy.class))).willAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        Policy result = autoPolicyService.create(new RegisterPolicyCommand(1L, 1L));
+
+        // Then
+        assertThat(result.getPremium()).isEqualTo(800_000L);
+    }
+
+    @Test
+    @DisplayName("만 21세 미만 운전자는 가입이 거절된다")
+    void register_rejected_too_young() {
+        // Given
+        Driver babyDriver = new Driver(1L, "어린이", LocalDate.now().minusYears(20), 0, "010-1234-5678");
+        Car car = new Car(1L, "234오6789", "그랜저", "더 뉴 그랜저IG", 2021, 19_390_000L, true);
+
+        given(loadDriverPort.loadDriver(1L)).willReturn(Optional.of(babyDriver));
+        given(loadCarPort.loadCar(1L)).willReturn(Optional.of(car));
+        given(savePolicyPort.save(any(Policy.class))).willAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        Policy result = autoPolicyService.create(new RegisterPolicyCommand(1L, 1L));
+
+        // Then
+        assertThat(result.getStatus()).isEqualTo(PolicyStatus.REJECTED);
+        assertThat(result.getPremium()).isEqualTo(0L);
     }
 }

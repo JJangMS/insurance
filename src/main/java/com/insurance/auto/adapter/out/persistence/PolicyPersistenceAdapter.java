@@ -18,7 +18,7 @@ public class PolicyPersistenceAdapter implements SavePolicyPort, LoadPolicyPort 
     private final PolicyJpaRepository policyRepository;
 
     @Override
-    public void save(Policy policy) {
+    public Policy save(Policy policy) {
         PolicyJpaEntity entity = new PolicyJpaEntity(
                 policy.getPolicyNumber(),
                 policy.getDriverId(),
@@ -28,7 +28,9 @@ public class PolicyPersistenceAdapter implements SavePolicyPort, LoadPolicyPort 
                 policy.getStartDate(),
                 policy.getEndDate()
         );
-        policyRepository.save(entity);
+        PolicyJpaEntity savedEntity = policyRepository.save(entity);
+
+        return mapToDomain(savedEntity);
     }
 
     @Override

@@ -36,24 +36,21 @@ public class AutoPolicyService implements RegisterPolicyUseCase {
 
         Policy policy = new Policy(driver.id(), car.id());
 
-        savePolicyPort.save(policy);
+        long basePremium = 600_000L;
+        long ageSurcharge = 200_000L;
+        long accidentSurcharge = 100_000L;
+        policy.review(driver, basePremium, ageSurcharge, accidentSurcharge);
 
-        return policy;
+        return savePolicyPort.save(policy);
     }
 
     public Policy approve(Long policyId, java.time.LocalDate requestedStartDate) {
         Policy policy = loadPolicyPort.loadPolicy(policyId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 가입 내역을 찾을 수 없습니다."));
-        Driver driver = loadDriverPort.loadDriver(policy.getDriverId())
-                .orElseThrow(() -> new IllegalArgumentException("운전자 정보를 불러올 수 없습니다."));
 
-        Long calculatedPremium = dummyCalculatePremium(driver);
+        policy.approve(requestedStartDate);
 
-        policy.approve(driver, requestedStartDate, calculatedPremium);
-
-        savePolicyPort.save(policy);
-
-        return policy;
+        return savePolicyPort.save(policy);
     }
 
     @Transactional(readOnly = true)
@@ -65,18 +62,6 @@ public class AutoPolicyService implements RegisterPolicyUseCase {
 
                     return new CustomerInquiryInfo(driver, car.orElse(null));
                 })
-                .orElse(null);
-    }
-
-    private Long dummyCalculatePremium(Driver driver) {
-        long basePremium = 600_000L;
-
-        if (driver.getAge() < 25) {
-            basePremium += 200_000L;
-        }
-
-        basePremium += (driver.accidentHistoryCount() * 100_000L);
-
-        return basePremium;
+                .orElseThrow(() -> new IllegalArgumentException("가입 정보를 찾을 수 없습니다."));
     }
 }

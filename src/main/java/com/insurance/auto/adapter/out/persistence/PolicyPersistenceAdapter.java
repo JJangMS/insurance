@@ -37,6 +37,12 @@ public class PolicyPersistenceAdapter implements SavePolicyPort, LoadPolicyPort 
                 .map(this::mapToDomain);
     }
 
+    @Override
+    public Optional<Policy> loadLatestPolicy(Long driverId) {
+        return policyRepository.findTopByDriverIdOrderByIdDesc(driverId)
+                .map(this::mapToDomain);
+    }
+
     private Policy mapToDomain(PolicyJpaEntity entity) {
         return new Policy(
                 entity.getId(),

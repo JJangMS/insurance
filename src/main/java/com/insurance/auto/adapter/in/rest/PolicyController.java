@@ -18,12 +18,12 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/policy")
+@RequestMapping("/api/v1/policy")
 public class PolicyController {
 
     private final RegisterPolicyUseCase registerPolicyUseCase;
 
-    @PostMapping("/api/v1/create")
+    @PostMapping("/create")
     public ResponseEntity<PolicyResponse> createInsurancePolicy(@RequestBody CreatePolicyRequest request) {
         log.info("JJ::createInsurancePolicy:: Driver: {}, Car: {}", request.driverId(), request.carId());
 
@@ -33,7 +33,7 @@ public class PolicyController {
         return ResponseEntity.ok(PolicyResponse.from(policy));
     }
 
-    @PostMapping("/api/v1/{policyId}/approve")
+    @PostMapping("/{policyId}/approve")
     public ResponseEntity<PolicyResponse> approveInsurance(@PathVariable Long policyId, @RequestBody ApproveRequest request) {
         log.info("JJ::approveInsurance:: PolicyID: {}, StartDate: {}", policyId, request.startDate());
 

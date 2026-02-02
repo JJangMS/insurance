@@ -2,6 +2,7 @@ package com.insurance.auto.application.service;
 
 import com.insurance.auto.application.port.in.RegisterPolicyCommand;
 import com.insurance.auto.application.port.in.RegisterPolicyUseCase;
+import com.insurance.auto.application.port.in.dto.CustomerInquiryInfo;
 import com.insurance.auto.application.port.out.LoadCarPort;
 import com.insurance.auto.application.port.out.LoadDriverPort;
 import com.insurance.auto.application.port.out.LoadPolicyPort;
@@ -12,6 +13,9 @@ import com.insurance.auto.domain.model.Policy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -50,6 +54,18 @@ public class AutoPolicyService implements RegisterPolicyUseCase {
         savePolicyPort.save(policy);
 
         return policy;
+    }
+
+    @Transactional(readOnly = true)
+    public CustomerInquiryInfo inquireCustomer(String name, LocalDate birthDate, String phone) {
+        return loadDriverPort.loadDriver(name, birthDate, phone)
+                .map(driver -> {
+                    Optional<Car> car = loadPolicyPort.loadLatestPolicy(driver.id())
+                            .flatMap(policy -> loadCarPort.loadCar(policy.getCarId()));
+
+                    return new CustomerInquiryInfo(driver, car.orElse(null));
+                })
+                .orElse(null);
     }
 
     private Long dummyCalculatePremium(Driver driver) {

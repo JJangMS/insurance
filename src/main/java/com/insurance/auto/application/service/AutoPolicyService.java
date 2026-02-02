@@ -1,11 +1,15 @@
 package com.insurance.auto.application.service;
 
+import com.insurance.auto.application.port.in.RegisterDriverCarCommand;
+import com.insurance.auto.application.port.in.RegisterDriverCarUseCase;
 import com.insurance.auto.application.port.in.RegisterPolicyCommand;
 import com.insurance.auto.application.port.in.RegisterPolicyUseCase;
 import com.insurance.auto.application.port.in.dto.CustomerInquiryInfo;
 import com.insurance.auto.application.port.out.LoadCarPort;
 import com.insurance.auto.application.port.out.LoadDriverPort;
 import com.insurance.auto.application.port.out.LoadPolicyPort;
+import com.insurance.auto.application.port.out.SaveCarPort;
+import com.insurance.auto.application.port.out.SaveDriverPort;
 import com.insurance.auto.application.port.out.SavePolicyPort;
 import com.insurance.auto.domain.model.Car;
 import com.insurance.auto.domain.model.Driver;
@@ -20,12 +24,14 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class AutoPolicyService implements RegisterPolicyUseCase {
+public class AutoPolicyService implements RegisterPolicyUseCase, RegisterDriverCarUseCase {
 
     private final LoadCarPort loadCarPort;
     private final LoadDriverPort loadDriverPort;
     private final LoadPolicyPort loadPolicyPort;
     private final SavePolicyPort savePolicyPort;
+    private final SaveDriverPort saveDriverPort;
+    private final SaveCarPort saveCarPort;
 
     @Override
     public Policy create(RegisterPolicyCommand command) {
@@ -44,6 +50,7 @@ public class AutoPolicyService implements RegisterPolicyUseCase {
         return savePolicyPort.save(policy);
     }
 
+    @Override
     public Policy approve(Long policyId, java.time.LocalDate requestedStartDate) {
         Policy policy = loadPolicyPort.loadPolicy(policyId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 가입 내역을 찾을 수 없습니다."));
@@ -51,6 +58,31 @@ public class AutoPolicyService implements RegisterPolicyUseCase {
         policy.approve(requestedStartDate);
 
         return savePolicyPort.save(policy);
+    }
+
+    @Override
+    public CustomerInquiryInfo register(RegisterDriverCarCommand command) {
+        Driver newDriver = new Driver(
+                null,
+                command.name(),
+                command.birthDate(),
+                0,
+                command.phone()
+        );
+        Driver savedDriver = saveDriverPort.save(newDriver);
+
+        Car newCar = new Car(
+                null,
+                command.carNumber(),
+                command.carModel(),
+                command.carModelName(),
+                command.carModelYear(),
+                20_000_000L,
+                true
+        );
+        Car savedCar = saveCarPort.save(newCar);
+
+        return new CustomerInquiryInfo(savedDriver, savedCar);
     }
 
     @Transactional(readOnly = true)

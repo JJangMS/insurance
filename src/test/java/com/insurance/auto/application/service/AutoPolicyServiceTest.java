@@ -1,5 +1,6 @@
 package com.insurance.auto.application.service;
 
+import com.insurance.auto.application.port.in.RegisterDriverCarCommand;
 import com.insurance.auto.application.port.in.RegisterPolicyCommand;
 import com.insurance.auto.application.port.in.dto.CustomerInquiryInfo;
 import com.insurance.auto.application.port.out.*;
@@ -25,8 +26,10 @@ class AutoPolicyServiceTest {
     @InjectMocks AutoPolicyService autoPolicyService;
     @Mock LoadDriverPort loadDriverPort;
     @Mock LoadCarPort loadCarPort;
-    @Mock SavePolicyPort savePolicyPort;
     @Mock LoadPolicyPort loadPolicyPort;
+    @Mock SaveDriverPort saveDriverPort;
+    @Mock SaveCarPort saveCarPort;
+    @Mock SavePolicyPort savePolicyPort;
 
     @Test
     @DisplayName("운전자와 차량 정보가 있으면 임시 정책을 생성하고 저장한다")
@@ -139,5 +142,33 @@ class AutoPolicyServiceTest {
         // Then
         assertThat(result.getStatus()).isEqualTo(PolicyStatus.REJECTED);
         assertThat(result.getPremium()).isEqualTo(0L);
+    }
+
+    @Test
+    @DisplayName("신규 가입 요청 시 운전자와 차량 정보를 저장하고 반환한다")
+    void register_new_driver_and_car_success() {
+        // Given
+        RegisterDriverCarCommand command = new RegisterDriverCarCommand(
+                "장민수수", LocalDate.of(1995, 5, 5), "010-9999-8888",
+                "123가4567", "모델y", "듀얼모터", 2026
+        );
+
+        // Mocking: 저장 후 ID가 부여된 객체를 반환한다고 가정
+        Driver savedDriver = new Driver(10L, command.name(), command.birthDate(), 0, command.phone());
+        Car savedCar = new Car(20L, command.carNumber(), command.carModel(), command.carModelName(), command.carModelYear(), 20_000_000L, true);
+
+        given(saveDriverPort.save(any(Driver.class))).willReturn(savedDriver);
+        given(saveCarPort.save(any(Car.class))).willReturn(savedCar);
+
+        // When
+        CustomerInquiryInfo result = autoPolicyService.register(command);
+
+        // Then
+        assertThat(result.driver()).isEqualTo(savedDriver);
+        assertThat(result.car()).isEqualTo(savedCar);
+
+        // 실제로 저장이 호출되었는지 검증
+        verify(saveDriverPort).save(any(Driver.class));
+        verify(saveCarPort).save(any(Car.class));
     }
 }

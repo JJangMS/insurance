@@ -7,7 +7,8 @@ public record Driver(
         Long id,
         String name,
         LocalDate birthDate,
-        int accidentHistoryCount
+        int accidentHistoryCount,
+        String phone
 ) {
     public int getAge() {
         return Period.between(birthDate, LocalDate.now()).getYears();

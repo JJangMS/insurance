@@ -19,18 +19,18 @@ public class PolicyPersistenceAdapter implements SavePolicyPort, LoadPolicyPort 
 
     @Override
     public Policy save(Policy policy) {
-        PolicyJpaEntity entity = new PolicyJpaEntity(
-                policy.getPolicyNumber(),
-                policy.getDriverId(),
-                policy.getCarId(),
-                policy.getPremium(),
-                policy.getStatus().name(),
-                policy.getStartDate(),
-                policy.getEndDate()
-        );
-        PolicyJpaEntity savedEntity = policyRepository.save(entity);
+        PolicyJpaEntity entity;
 
-        return mapToDomain(savedEntity);
+        if (policy.getId() == null) {
+            entity = PolicyJpaEntity.from(policy);
+        } else {
+            entity = policyRepository.findById(policy.getId())
+                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 ID 입니다."));
+
+            entity.updatePolicy(policy);
+        }
+
+        return mapToDomain(policyRepository.save(entity));
     }
 
     @Override

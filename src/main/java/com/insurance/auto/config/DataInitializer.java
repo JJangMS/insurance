@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Slf4j
@@ -50,15 +51,18 @@ public class DataInitializer implements CommandLineRunner {
         );
         CarJpaEntity savedCar = carRepository.save(car);
 
-        PolicyJpaEntity policy = new PolicyJpaEntity(
-                UUID.randomUUID().toString(),
-                savedDriver.getId(),
-                savedCar.getId(),
-                802_360L,
-                PolicyStatus.APPROVED.name(),
-                LocalDate.of(2025, 10, 21),
-                LocalDate.of(2026, 10, 20)
-        );
+        PolicyJpaEntity policy = PolicyJpaEntity.builder()
+                .id(null)
+                .policyNumber("P-123")
+                .driverId(savedDriver.getId())
+                .carId(savedCar.getId())
+                .premium(802_360L)
+                .status(PolicyStatus.APPROVED.name())
+                .startDate(LocalDate.of(2025, 10, 21))
+                .endDate(LocalDate.of(2026, 10, 20))
+                .createdAt(LocalDateTime.now())
+                .build();
+
         policyRepository.save(policy);
 
         log.info("=========================================");

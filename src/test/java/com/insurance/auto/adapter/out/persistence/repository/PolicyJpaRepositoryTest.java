@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -25,26 +26,28 @@ class PolicyJpaRepositoryTest {
         // Given
         Long driverId = 1L;
 
-        PolicyJpaEntity oldPolicy = new PolicyJpaEntity(
-                UUID.randomUUID().toString(),
-                driverId,
-                10L,
-                500000L,
-                PolicyStatus.APPROVED.name(),
-                LocalDate.now().minusYears(2),
-                LocalDate.now().minusYears(1)
-        );
+        PolicyJpaEntity oldPolicy = PolicyJpaEntity.builder()
+                .policyNumber(UUID.randomUUID().toString())
+                .driverId(driverId)
+                .carId(10L)
+                .premium(500000L)
+                .status(PolicyStatus.APPROVED.name())
+                .startDate(LocalDate.now().minusYears(2))
+                .endDate(LocalDate.now().minusYears(1))
+                .createdAt(LocalDateTime.now().minusYears(2))
+                .build();
         policyRepository.save(oldPolicy);
 
-        PolicyJpaEntity newPolicy = new PolicyJpaEntity(
-                UUID.randomUUID().toString(),
-                driverId,
-                20L,
-                600000L,
-                PolicyStatus.APPROVED.name(),
-                LocalDate.now(),
-                LocalDate.now().plusYears(1)
-        );
+        PolicyJpaEntity newPolicy = PolicyJpaEntity.builder()
+                .policyNumber(UUID.randomUUID().toString())
+                .driverId(driverId)
+                .carId(20L)
+                .premium(600000L)
+                .status(PolicyStatus.APPROVED.name())
+                .startDate(LocalDate.now())
+                .endDate(LocalDate.now().plusYears(1))
+                .createdAt(LocalDateTime.now())
+                .build();
         policyRepository.save(newPolicy);
 
         // When

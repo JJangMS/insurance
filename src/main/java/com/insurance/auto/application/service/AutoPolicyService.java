@@ -43,10 +43,24 @@ public class AutoPolicyService implements RegisterPolicyUseCase {
         Driver driver = loadDriverPort.loadDriver(policy.getDriverId())
                 .orElseThrow(() -> new IllegalArgumentException("운전자 정보를 불러올 수 없습니다."));
 
-        policy.approve(driver, requestedStartDate);
+        Long calculatedPremium = dummyCalculatePremium(driver);
+
+        policy.approve(driver, requestedStartDate, calculatedPremium);
 
         savePolicyPort.save(policy);
 
         return policy;
+    }
+
+    private Long dummyCalculatePremium(Driver driver) {
+        long basePremium = 600_000L;
+
+        if (driver.getAge() < 25) {
+            basePremium += 200_000L;
+        }
+
+        basePremium += (driver.accidentHistoryCount() * 100_000L);
+
+        return basePremium;
     }
 }

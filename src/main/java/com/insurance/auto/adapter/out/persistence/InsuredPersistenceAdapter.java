@@ -13,6 +13,7 @@ import com.insurance.auto.domain.model.Driver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 @Component
@@ -69,6 +70,18 @@ public class InsuredPersistenceAdapter implements SaveDriverPort, SaveCarPort, L
     @Override
     public Optional<Driver> loadDriver(Long driverId) {
         return driverRepository.findById(driverId)
+                .map(entity -> new Driver(
+                        entity.getId(),
+                        entity.getName(),
+                        entity.getBirthDate(),
+                        entity.getAccidentHistoryCount(),
+                        entity.getPhone()
+                ));
+    }
+
+    @Override
+    public Optional<Driver> loadDriver(String name, LocalDate birthDate, String phone) {
+        return driverRepository.findByNameAndBirthDateAndPhone(name, birthDate, phone)
                 .map(entity -> new Driver(
                         entity.getId(),
                         entity.getName(),

@@ -44,16 +44,13 @@ public class Policy {
         }
     }
 
-    public void updatePremium(Long calculatedPremium) {
-        this.premium = calculatedPremium;
-    }
-
-    public void approve(Driver driver, LocalDate requestedStartDate) {
+    public void approve(Driver driver, LocalDate requestedStartDate, Long calculatedPremium) {
         underwrite(driver);
 
         if (this.status == PolicyStatus.APPROVED) {
             this.startDate = requestedStartDate;
             this.endDate = requestedStartDate.plusYears(1).minusDays(1);
+            this.premium = calculatedPremium;
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.insurance.auto.application.service;
 
+import com.insurance.auto.application.port.in.InquiryCustomerQuery;
 import com.insurance.auto.application.port.in.RegisterDriverCarCommand;
 import com.insurance.auto.application.port.in.RegisterDriverCarUseCase;
 import com.insurance.auto.application.port.in.RegisterPolicyCommand;
@@ -24,7 +25,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class AutoPolicyService implements RegisterPolicyUseCase, RegisterDriverCarUseCase {
+public class AutoPolicyService implements RegisterPolicyUseCase, RegisterDriverCarUseCase, InquiryCustomerQuery {
 
     private final LoadCarPort loadCarPort;
     private final LoadDriverPort loadDriverPort;
@@ -85,6 +86,7 @@ public class AutoPolicyService implements RegisterPolicyUseCase, RegisterDriverC
         return new CustomerInquiryInfo(savedDriver, savedCar);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public CustomerInquiryInfo inquireCustomer(String name, LocalDate birthDate, String phone) {
         return loadDriverPort.loadDriver(name, birthDate, phone)

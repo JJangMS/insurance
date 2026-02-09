@@ -1,9 +1,10 @@
 package com.insurance.auto.adapter.in.rest;
 
 import com.insurance.auto.adapter.in.rest.dto.InquiryResponse;
+import com.insurance.auto.application.port.in.InquiryCustomerQuery;
 import com.insurance.auto.application.port.in.RegisterDriverCarCommand;
+import com.insurance.auto.application.port.in.RegisterDriverCarUseCase;
 import com.insurance.auto.application.port.in.dto.CustomerInquiryInfo;
-import com.insurance.auto.application.service.AutoPolicyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -22,7 +23,8 @@ import java.time.LocalDate;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/driver")
 public class DriverController {
-    private final AutoPolicyService autoPolicyService;
+    private final RegisterDriverCarUseCase registerDriverCarUseCase;
+    private final InquiryCustomerQuery inquiryQuery;
 
     @GetMapping("/inquiry")
     public ResponseEntity<InquiryResponse> inquireDriver(
@@ -32,7 +34,7 @@ public class DriverController {
     ) {
         log.info("JJ::inquireDriver:: {}, {}, {}", name, birthDate, phone);
 
-        CustomerInquiryInfo info = autoPolicyService.inquireCustomer(name, birthDate, phone);
+        CustomerInquiryInfo info = inquiryQuery.inquireCustomer(name, birthDate, phone);
 
         if (info == null) {
             return ResponseEntity.noContent().build(); // 204
@@ -44,7 +46,7 @@ public class DriverController {
     @PostMapping("/register")
     public ResponseEntity<InquiryResponse> registerDriverAndCar(@RequestBody RegisterDriverCarCommand command) {
         log.info("JJ::registerDriver:: {}, {}", command.name(), command.carNumber());
-        CustomerInquiryInfo info = autoPolicyService.register(command);
+        CustomerInquiryInfo info = registerDriverCarUseCase.register(command);
 
         return ResponseEntity.ok(InquiryResponse.from(info));
     }
